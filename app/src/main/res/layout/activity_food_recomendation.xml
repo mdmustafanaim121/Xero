@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".FoodList">
 
+
     <com.mancj.materialsearchbar.MaterialSearchBar
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
@@ -21,25 +22,5 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         android:layout_above="@+id/recomm"/>
-
-    <info.hoang8f.widget.FButton
-        android:id="@+id/recomm"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="8dp"
-        android:text="Get Recommendation"
-        android:textColor="@android:color/white"
-        app:cornerRadius="4dp"
-        app:fButtonColor="@color/signUp"
-        app:shadowColor="@android:color/black"
-        app:shadowEnabled="true"
-        android:onClick="getRecommendation"
-        app:shadowHeight="5dp"
-        />
-
-    />
-
-
 
 </RelativeLayout>

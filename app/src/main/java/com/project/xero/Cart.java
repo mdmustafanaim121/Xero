@@ -12,8 +12,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +23,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.project.xero.Common.Common;
 import com.project.xero.Database.Database;
+import com.project.xero.Model.Food;
 import com.project.xero.Model.MyResponse;
 import com.project.xero.Model.Notification;
 import com.project.xero.Model.Order;
@@ -46,6 +45,7 @@ import retrofit2.Response;
 
 public class Cart extends AppCompatActivity {
 
+    private static final String TAG = "Cart";
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
 
@@ -96,6 +96,7 @@ public class Cart extends AppCompatActivity {
         });
 
         loadListFood();
+
     }
 
     //Method showAlertDialog()
@@ -105,10 +106,10 @@ public class Cart extends AppCompatActivity {
         alertDialog.setMessage("Enter your address and comment any details for the restaurant: ");
 
         LayoutInflater inflater = this.getLayoutInflater();
-        View order_address_comment = inflater.inflate(R.layout.order_address_comment,null);
+        View order_address_comment = inflater.inflate(R.layout.order_address_comment, null);
 
-        final MaterialEditText xAddress = (MaterialEditText)order_address_comment.findViewById(R.id.xAddress);
-        final MaterialEditText xComment = (MaterialEditText)order_address_comment.findViewById(R.id.xComment);
+        final MaterialEditText xAddress = (MaterialEditText) order_address_comment.findViewById(R.id.xAddress);
+        final MaterialEditText xComment = (MaterialEditText) order_address_comment.findViewById(R.id.xComment);
 
         alertDialog.setIcon(R.drawable.ic_shopping_cart_black_24dp);
 
@@ -136,11 +137,12 @@ public class Cart extends AppCompatActivity {
 
                 //Delete cart
                 new Database(getBaseContext()).cleanCart();
-                
-                sendNotificationOrder(order_number);
 
-               // Toast.makeText(Cart.this, "Thank you, Order Place.", Toast.LENGTH_SHORT).show();
+                sendNotificationOrder(order_number);
+                // Toast.makeText(Cart.this, "Thank you, Order Place.", Toast.LENGTH_SHORT).show();
                 //finish();
+
+                updateRecommendation(cart);
             }
         });
 
@@ -161,19 +163,18 @@ public class Cart extends AppCompatActivity {
         data.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(DataSnapshot postSnapshot:dataSnapshot.getChildren())
-                {
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                     Token serverToken = postSnapshot.getValue(Token.class);
 
                     //Raw payload to send
-                    Notification not = new Notification("Xero","You have a new order" +order_number);
-                    Sender content = new Sender(serverToken.getToken(),not);
+                    Notification not = new Notification("Xero", "You have a new order" + order_number);
+                    Sender content = new Sender(serverToken.getToken(), not);
 
                     mService.sendNotification(content)
                             .enqueue(new Callback<MyResponse>() {
                                 @Override
                                 public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
-                                    if(response.code() == 200) {
+                                    if (response.code() == 200) {
                                         if (response.body().success == 1) {
                                             Toast.makeText(Cart.this, "Thank you, Your order has been placed", Toast.LENGTH_SHORT).show();
                                             finish();
@@ -187,7 +188,7 @@ public class Cart extends AppCompatActivity {
                                 @Override
                                 public void onFailure(Call<MyResponse> call, Throwable t) {
 
-                                    Log.d("ERROR",t.getMessage());
+                                    Log.d("ERROR", t.getMessage());
                                 }
                             });
 
@@ -210,8 +211,8 @@ public class Cart extends AppCompatActivity {
 
         //Calculate total price
         int total = 0;
-        for (Order order : cart){
-           total += (Integer.parseInt(order.getPrice()))*(Integer.parseInt(order.getQuantity()));
+        for (Order order : cart) {
+            total += (Integer.parseInt(order.getPrice())) * (Integer.parseInt(order.getQuantity()));
         }
         Locale locale = new Locale("en", "US");
         NumberFormat fmt = NumberFormat.getCurrencyInstance();
@@ -228,11 +229,60 @@ public class Cart extends AppCompatActivity {
     private void deleteCart(int position) {
         cart.remove(position);
         new Database(this).cleanCart();
-        for (Order item:cart)
+        for (Order item : cart)
             new Database(this).addToCart(item);
         //refresh
         loadListFood();
     }
+
+
+    //region Update Food Recommendation
+    private void updateRecommendation(final List<Order> orderCartList) {
+
+        if (orderCartList == null || orderCartList.isEmpty()) {
+            return;
+        }
+
+        final DatabaseReference foodReference = database.getReference("Food");
+
+        foodReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    Food foodModel = postSnapshot.getValue(Food.class);
+
+                    assert foodModel != null;
+                    Log.i(TAG, "onDataChange: " + foodModel.getPopularity());
+
+                    for (Order order : orderCartList) {
+
+                        if (foodModel.getFoodId().equals(order.getProductId())) {
+
+                            int popularity = foodModel.getPopularity();
+                            popularity = popularity + 1;
+
+
+                            foodReference.child(foodModel.getFoodId()).child("Popularity")
+                                    .setValue(popularity);
+
+                            Log.i(TAG, "updateRecommendation Popularity : " + order.getProductName());
+
+
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+    //endregion
 
 }
 

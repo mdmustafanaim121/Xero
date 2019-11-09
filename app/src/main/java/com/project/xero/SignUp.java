@@ -30,6 +30,7 @@ public class SignUp extends AppCompatActivity {
         xPhone = (MaterialEditText)findViewById(R.id.phoneNo);
         xName = (MaterialEditText) findViewById(R.id.Name);
         xPassword = (MaterialEditText) findViewById(R.id.xPassword);
+        signup = findViewById(R.id.signUp);
 
         //Initializing Firebase for verifying login process
 

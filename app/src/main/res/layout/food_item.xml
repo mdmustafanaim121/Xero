@@ -14,10 +14,26 @@
 
         <ImageView
             android:id="@+id/foodImg"
+            android:adjustViewBounds="true"
             android:scaleType="centerCrop"
             android:src="@drawable/px_bg5"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/foodPopularity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:background="@color/overlayBackground"
+            android:gravity="right"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text=""
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="match_parent"
@@ -28,7 +44,7 @@
             android:background="@color/overlayBackground"
             android:textSize="20sp"
             android:gravity="center"
-            android:layout_alignParentBottom="true"></TextView>
+            android:layout_alignParentBottom="true"/>
 
 
 

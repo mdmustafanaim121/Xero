@@ -12,6 +12,7 @@ import com.project.xero.R;
 public class FoodViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
     public TextView foodName;
+    public TextView foodPopularity;
     public ImageView foodImage;
 
     private ItemClickListener itemClickListener;
@@ -23,16 +24,16 @@ public class FoodViewHolder extends RecyclerView.ViewHolder implements View.OnCl
     public FoodViewHolder(@NonNull View itemView) {
         super(itemView);
 
-        foodName = (TextView)itemView.findViewById(R.id.foodName);
-        foodImage = (ImageView)itemView.findViewById(R.id.foodImg);
+        foodName = (TextView) itemView.findViewById(R.id.foodName);
+        foodImage = (ImageView) itemView.findViewById(R.id.foodImg);
+        foodPopularity = (TextView) itemView.findViewById(R.id.foodPopularity);
         itemView.setOnClickListener(this);
 
     }
 
     @Override
     public void onClick(View view) {
-        itemClickListener.onClick(view,getAdapterPosition(),false);
-
+        itemClickListener.onClick(view, getAdapterPosition(), false);
 
     }
 }

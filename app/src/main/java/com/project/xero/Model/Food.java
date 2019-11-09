@@ -8,6 +8,8 @@ public class Food {
     private String Price;
     private String Discount;
     private String MenuId;
+    private String FoodId;
+    private int Popularity;
 
     public Food(){
 
@@ -58,6 +60,22 @@ public class Food {
 
     public void setMenuId(String menuId) {
         MenuId = menuId;
+    }
+
+    public String getFoodId() {
+        return FoodId;
+    }
+
+    public void setFoodId(String foodId) {
+        this.FoodId = foodId;
+    }
+
+    public int getPopularity() {
+        return Popularity;
+    }
+
+    public void setPopularity(int popularity) {
+        this.Popularity = popularity;
     }
 
     public Food(String name, String image, String description, String price, String discount, String menuId) {

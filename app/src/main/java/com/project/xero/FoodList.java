@@ -34,11 +34,11 @@ public class FoodList extends AppCompatActivity {
 
     FirebaseDatabase database;
     DatabaseReference foodList;
-    String categoryId ="";
+    String categoryId = "";
     FirebaseRecyclerAdapter<Food, FoodViewHolder> adapter;
 
     //Code for Search Functionality
-    FirebaseRecyclerAdapter<Food,FoodViewHolder> searchAdapter;
+    FirebaseRecyclerAdapter<Food, FoodViewHolder> searchAdapter;
     List<String> suggestList = new ArrayList<>();
     MaterialSearchBar materialSearchBar;
 
@@ -51,27 +51,26 @@ public class FoodList extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         foodList = database.getReference("Food");
 
-        recyclerView = (RecyclerView)findViewById(R.id.recycler_food);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_food);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        
+
         //Fetching intent value
-        if(getIntent() !=null)
+        if (getIntent() != null)
             categoryId = getIntent().getStringExtra("CategoryId");
-        if(!categoryId.isEmpty() && categoryId !=null)
-        {
+        if (!categoryId.isEmpty() && categoryId != null) {
             if (Common.isConnectedToInternet(getBaseContext())) {
                 loadListFood(categoryId);
 
-            }else {
+            } else {
                 Toast.makeText(FoodList.this, "Please, check your internet connection", Toast.LENGTH_SHORT).show();
                 return;
             }
         }
 
         //Search
-        materialSearchBar = (MaterialSearchBar)findViewById(R.id.searchBar);
+        materialSearchBar = (MaterialSearchBar) findViewById(R.id.searchBar);
         materialSearchBar.setHint("Enter your food:");
         materialSearchBar.setSpeechMode(false);
         loadSuggest();// Function to load suggestion for searchbar from Firebase
@@ -88,13 +87,12 @@ public class FoodList extends AppCompatActivity {
                 //When user starts typing they get suggestions
 
                 List<String> suggest = new ArrayList<String>();
-                for(String search:suggestList)
-                {
-                    if(search.toLowerCase().contains(materialSearchBar.getText().toLowerCase()))
+                for (String search : suggestList) {
+                    if (search.toLowerCase().contains(materialSearchBar.getText().toLowerCase()))
                         suggest.add(search);
 
                 }
-                    materialSearchBar.setLastSuggestions(suggest);
+                materialSearchBar.setLastSuggestions(suggest);
             }
 
             @Override
@@ -106,7 +104,7 @@ public class FoodList extends AppCompatActivity {
             @Override
             public void onSearchStateChanged(boolean enabled) {
                 //Restore Original Adapter
-                if(!enabled)
+                if (!enabled)
                     recyclerView.setAdapter(adapter);
             }
 
@@ -146,12 +144,13 @@ public class FoodList extends AppCompatActivity {
                         Intent foodDetail = new Intent(FoodList.this, FoodDetails.class);
                         foodDetail.putExtra("FoodId", searchAdapter.getRef(position).getKey());
                         startActivity(foodDetail);
-                    }});
                     }
-            };
-
-                recyclerView.setAdapter(searchAdapter); //Set Adapter for recycler view is search;
+                });
             }
+        };
+
+        recyclerView.setAdapter(searchAdapter); //Set Adapter for recycler view is search;
+    }
 
 
     private void loadSuggest() {
@@ -192,8 +191,8 @@ public class FoodList extends AppCompatActivity {
                 viewHolder.setItemClickListener(new ItemClickListener() {
                     @Override
                     public void onClick(View view, int position, boolean isLongClick) {
-                        Intent foodDetail = new Intent(FoodList.this,FoodDetails.class);
-                        foodDetail.putExtra("FoodId",adapter.getRef(position).getKey());
+                        Intent foodDetail = new Intent(FoodList.this, FoodDetails.class);
+                        foodDetail.putExtra("FoodId", adapter.getRef(position).getKey());
                         startActivity(foodDetail);
                     }
                 });
@@ -204,4 +203,13 @@ public class FoodList extends AppCompatActivity {
         //Set Adapter for our code
         recyclerView.setAdapter(adapter);
     }
+
+    //region Update Food Recommendation
+    public void getRecommendation(View view) {
+
+        Intent intent = new Intent(this, FoodRecommendation.class);
+        intent.putExtra("CategoryId", categoryId);
+        startActivity(intent);
+    }
+    //endregion
 }
