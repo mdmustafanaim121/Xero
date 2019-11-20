@@ -1,11 +1,14 @@
 package com.project.xero;
 
-import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AppCompatActivity;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,22 +22,31 @@ import com.project.xero.Common.Common;
 import com.project.xero.Database.Database;
 import com.project.xero.Model.Food;
 import com.project.xero.Model.Order;
+import com.project.xero.Model.Rating;
 import com.squareup.picasso.Picasso;
+import com.stepstone.apprating.AppRatingDialog;
+import com.stepstone.apprating.listener.RatingDialogListener;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
 
 
-public class FoodDetails extends AppCompatActivity {
+public class FoodDetails extends AppCompatActivity implements RatingDialogListener {
 
     TextView foodName, foodPrice, foodDescription;
     ImageView foodImage;
     CollapsingToolbarLayout collapsingToolbarLayout;
-    FloatingActionButton btnCart;
+    FloatingActionButton btnCart,btnRating;
     ElegantNumberButton numberButton;
+    RatingBar ratingBar;
 
     String foodId = "";
 
     //Firebase Database
     FirebaseDatabase database;
     DatabaseReference foods;
+    DatabaseReference ratingTb;
 
     Food currentFood;
 
@@ -46,10 +58,20 @@ public class FoodDetails extends AppCompatActivity {
         //Firebase
         database = FirebaseDatabase.getInstance();
         foods = database.getReference("Food");
+        ratingTb = database.getReference("Rating");
 
         //Init view
         numberButton = findViewById(R.id.number_button);
         btnCart = findViewById(R.id.btn_Cart);
+        btnRating = (FloatingActionButton)findViewById(R.id.btn_rating);
+        ratingBar = (RatingBar)findViewById(R.id.ratingBar);
+
+        btnRating.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showRatingDialog();
+            }
+        });
 
 
         btnCart.setOnClickListener(new View.OnClickListener() {
@@ -83,6 +105,7 @@ public class FoodDetails extends AppCompatActivity {
             if (Common.isConnectedToInternet(getBaseContext())) {
 
                 getDetailsFood(foodId);
+                getRatingFood(foodId);
             }
             else {
                 Toast.makeText(FoodDetails.this, "Please, check your internet connection", Toast.LENGTH_SHORT).show();
@@ -91,6 +114,52 @@ public class FoodDetails extends AppCompatActivity {
         }else {
             Toast.makeText(this, "Error: foodId = "+foodId, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void getRatingFood(String foodId) {
+        com.google.firebase.database.Query foodRating = ratingTb.orderByChild("foodId").equalTo(foodId);
+
+        foodRating.addValueEventListener(new ValueEventListener() {
+            int count=0,sum=0;
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot postSnapshot:dataSnapshot.getChildren())
+                {
+                    Rating item = postSnapshot.getValue(Rating.class);
+                    sum+=Integer.parseInt(item.getRateValue());
+                    count++;
+                }
+                if(count!=0) {
+                    float average = sum / count;
+                    ratingBar.setRating(average);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void showRatingDialog() {
+        new AppRatingDialog.Builder()
+                .setPositiveButtonText("Submit")
+                .setNegativeButtonText("Cancel")
+                .setNoteDescriptions(Arrays.asList("Poor","Average","Good","Very Good","Excellent"))
+                .setDefaultRating(1)
+                .setTitle("Rate this food")
+                .setDescription("Please give us your valuable ratings")
+                .setTitleTextColor(R.color.colorPrimary)
+                .setDescriptionTextColor(R.color.colorPrimary)
+                .setHint("Please write your comment")
+                .setHintTextColor(R.color.colorAccent)
+                .setCommentTextColor(android.R.color.white)
+                .setCommentBackgroundColor(R.color.colorPrimaryDark)
+                .setWindowAnimation(R.style.RatingDialogFadeAnim)
+                .create(FoodDetails.this)
+                .show();
     }
 
     // getDetailsFood() method
@@ -113,6 +182,45 @@ public class FoodDetails extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    public void onNegativeButtonClicked() {
+
+    }
+
+    @Override
+    public void onPositiveButtonClicked(int i, @NotNull String s) {
+
+        final Rating rating = new Rating(Common.curUser.getPhone(),
+                foodId,
+                String.valueOf(i),
+                s);
+        ratingTb.child(Common.curUser.getPhone()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.child(Common.curUser.getPhone()).exists())
+                {
+                    //remove old value
+                    ratingTb.child(Common.curUser.getPhone()).removeValue();
+                    //Update new Value
+                    ratingTb.child(Common.curUser.getPhone()).setValue(rating);
+                }
+                else
+                {
+                    //Update new val
+                    ratingTb.child(Common.curUser.getPhone()).setValue(rating);
+                }
+
+                Toast.makeText(FoodDetails.this, "Thank you for your ratings", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
     }
 }
 
