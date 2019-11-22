@@ -1,11 +1,11 @@
 package com.project.xero.ViewHolder;
 
-import android.media.Image;
-import android.support.v7.view.menu.MenuView;
-import android.support.v7.widget.RecyclerView;
+
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.project.xero.Interface.ItemClickListener;
 import com.project.xero.R;

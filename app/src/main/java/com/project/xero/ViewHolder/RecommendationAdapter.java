@@ -2,11 +2,13 @@ package com.project.xero.ViewHolder;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.project.xero.Interface.ItemClickListener;
 import com.project.xero.Model.Food;
 import com.project.xero.R;
