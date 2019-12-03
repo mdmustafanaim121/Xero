@@ -1,5 +1,9 @@
 package com.project.xero.Model;
 
+import androidx.annotation.NonNull;
+
+import com.google.gson.Gson;
+
 public class User {
 
     private String Name;
@@ -54,6 +58,7 @@ public class User {
 
     }
 
-
-
+    public String toJsonString() {
+        return new Gson().toJson(this);
+    }
 }

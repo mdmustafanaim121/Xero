@@ -1,9 +1,10 @@
 package com.project.xero;
 
 
-
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -25,7 +26,7 @@ import com.rey.material.widget.CheckBox;
 import io.paperdb.Paper;
 
 public class SignIn extends AppCompatActivity {
-    EditText phoneNo,xPassword;
+    EditText phoneNo, xPassword;
     Button signIn;
     com.rey.material.widget.CheckBox chkRemember;
 
@@ -34,9 +35,9 @@ public class SignIn extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        xPassword = (MaterialEditText)findViewById(R.id.xPassword);
-        phoneNo = (MaterialEditText)findViewById(R.id.phoneNo);
-        signIn = (Button)findViewById(R.id.signIn);
+        xPassword = (MaterialEditText) findViewById(R.id.xPassword);
+        phoneNo = (MaterialEditText) findViewById(R.id.phoneNo);
+        signIn = (Button) findViewById(R.id.signIn);
         chkRemember = (CheckBox) findViewById(R.id.xCheckBox);
 
         //Init Paper
@@ -54,10 +55,9 @@ public class SignIn extends AppCompatActivity {
                 if (Common.isConnectedToInternet(getBaseContext())) {
 
                     //Save user & password
-                    if(chkRemember.isChecked())
-                    {
-                        Paper.book().write(Common.USER_KEY,phoneNo.getText().toString());
-                        Paper.book().write(Common.PWD_KEY,xPassword.getText().toString());
+                    if (chkRemember.isChecked()) {
+                        Paper.book().write(Common.USER_KEY, phoneNo.getText().toString());
+                        Paper.book().write(Common.PWD_KEY, xPassword.getText().toString());
                     }
 
 
@@ -80,6 +80,11 @@ public class SignIn extends AppCompatActivity {
                                 if (user.getPassword().equals(xPassword.getText().toString())) {
                                     Intent intent = new Intent(SignIn.this, Home.class);
                                     Common.curUser = user;
+                                    SharedPreferences preferences = getSharedPreferences(getString(R.string.app_name),
+                                            Context.MODE_PRIVATE);
+                                    SharedPreferences.Editor editor = preferences.edit();
+                                    editor.putString("USER", user.toJsonString());
+                                    editor.apply();
                                     startActivity(intent);
                                     finish();
 
@@ -97,8 +102,7 @@ public class SignIn extends AppCompatActivity {
 
                         }
                     });
-                }
-                else {
+                } else {
                     Toast.makeText(SignIn.this, "Please, check your internet connection", Toast.LENGTH_SHORT).show();
                     return;
                 }
