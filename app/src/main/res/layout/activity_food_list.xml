@@ -14,7 +14,7 @@
         app:mt_hint="Enter food name!"
         app:mt_speechMode="false" />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_below="@+id/searchBar"
         android:id="@+id/recycler_food"
         android:layout_width="match_parent"
@@ -37,8 +37,6 @@
         android:onClick="getRecommendation"
         app:shadowHeight="5dp"
         />
-
-    />
 
 
 
