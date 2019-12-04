@@ -3,13 +3,13 @@ package com.project.xero.Model;
 public class Rating {
     private String userPhone;
     private String foodId;
-    private String rateValue;
+    private double rateValue;
     private String comment;
 
     public Rating() {
     }
 
-    public Rating(String userPhone, String foodId, String rateValue, String comment) {
+    public Rating(String userPhone, String foodId, double rateValue, String comment) {
         this.userPhone = userPhone;
         this.foodId = foodId;
         this.rateValue = rateValue;
@@ -32,11 +32,11 @@ public class Rating {
         this.foodId = foodId;
     }
 
-    public String getRateValue() {
+    public double getRateValue() {
         return rateValue;
     }
 
-    public void setRateValue(String rateValue) {
+    public void setRateValue(double rateValue) {
         this.rateValue = rateValue;
     }
 

@@ -1,5 +1,7 @@
 package com.project.xero.Model;
 
+import androidx.annotation.Nullable;
+
 public class Food {
 
     private String Name;
@@ -88,5 +90,10 @@ public class Food {
     }
 
 
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        Food food = (Food) obj;
+        return this.getFoodId().equals(food != null ? food.getFoodId() : false);
+    }
 
 }

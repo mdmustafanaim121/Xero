@@ -1,6 +1,7 @@
 package com.project.xero.Model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
@@ -35,7 +36,6 @@ public class User {
         Phone = phone;
     }
 
-
     public String getName() {
         return Name;
     }
@@ -52,13 +52,17 @@ public class User {
         Password = password;
     }
 
-
-
     public User() {
 
     }
 
     public String toJsonString() {
         return new Gson().toJson(this);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        User user = (User) obj;
+        return this.getPhone().equals(user != null ? user.getPhone() : false);
     }
 }

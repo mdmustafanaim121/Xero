@@ -120,18 +120,19 @@ public class FoodDetails extends AppCompatActivity implements RatingDialogListen
         com.google.firebase.database.Query foodRating = ratingTb.orderByChild("foodId").equalTo(foodId);
 
         foodRating.addValueEventListener(new ValueEventListener() {
-            int count = 0, sum = 0;
+            double count = 0, sum = 0;
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
                     Rating item = postSnapshot.getValue(Rating.class);
-                    sum += Integer.parseInt(item.getRateValue());
+                    assert item != null;
+                    sum += item.getRateValue();
                     count++;
                 }
                 if (count != 0) {
-                    float average = sum / count;
-                    ratingBar.setRating(average);
+                    double average = sum / count;
+                    ratingBar.setRating((float) average);
                 }
 
             }
@@ -194,7 +195,7 @@ public class FoodDetails extends AppCompatActivity implements RatingDialogListen
 
         final Rating rating = new Rating(Common.curUser.getPhone(),
                 foodId,
-                String.valueOf(i),
+                (double) i,
                 s);
         ratingTb.child(Common.curUser.getPhone()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

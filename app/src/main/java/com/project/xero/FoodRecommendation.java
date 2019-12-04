@@ -24,7 +24,9 @@ import com.mancj.materialsearchbar.MaterialSearchBar;
 import com.project.xero.Common.Common;
 import com.project.xero.Interface.ItemClickListener;
 import com.project.xero.Model.Food;
+import com.project.xero.Model.Rating;
 import com.project.xero.ViewHolder.RecommendationAdapter;
+import com.project.xero.util.Helper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,12 +38,15 @@ public class FoodRecommendation extends AppCompatActivity {
     private static final String TAG = "FoodRecommendation";
     private RecyclerView mRecyclerView;
     private DatabaseReference mFoodDataBase;
+    private DatabaseReference mUserDataBase;
+    private DatabaseReference mRatingDataBase;
     private List<Food> mFoodList = new ArrayList<>();
     private List<Food> mSearchList = new ArrayList<>();
     private String categoryId = "";
     private RecommendationAdapter mAdapter;
     private List<String> mSuggestList = new ArrayList<>();
     private MaterialSearchBar sMaterialSearchBar;
+    private boolean mShowPopularity = true;
 
     private ItemClickListener mListener = new ItemClickListener() {
         @Override
@@ -62,22 +67,14 @@ public class FoodRecommendation extends AppCompatActivity {
         setContentView(R.layout.activity_food_recomendation);
 
         mFoodDataBase = FirebaseDatabase.getInstance().getReference("Food");
+        mUserDataBase = FirebaseDatabase.getInstance().getReference("user");
+        mRatingDataBase = FirebaseDatabase.getInstance().getReference("Rating");
+
         mRecyclerView = findViewById(R.id.recycler_food);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        if (getIntent() != null)
-            categoryId = getIntent().getStringExtra("CategoryId");
-        if (categoryId != null && !categoryId.isEmpty()) {
-            if (Common.isConnectedToInternet(getBaseContext())) {
-
-                loadData(categoryId);
-            } else {
-                Toast.makeText(this, "Please, check your internet connection",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-        }
+        hasUserRatedFood();
 
         //region Search
         sMaterialSearchBar = findViewById(R.id.searchBar);
@@ -167,7 +164,18 @@ public class FoodRecommendation extends AppCompatActivity {
      *
      * Need custom Adapter
      * */
-    private void loadData(String categoryId) {
+    private void loadPopularityData() {
+
+        if (getIntent() != null)
+            categoryId = getIntent().getStringExtra("CategoryId");
+        if (categoryId != null && !categoryId.isEmpty()) {
+            if (!Common.isConnectedToInternet(getBaseContext())) {
+
+                Toast.makeText(this, "Please, check your internet connection",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
 
         mFoodDataBase.orderByChild("MenuId").equalTo(categoryId)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -213,4 +221,92 @@ public class FoodRecommendation extends AppCompatActivity {
                 foodList, mListener);
         mRecyclerView.setAdapter(mAdapter);
     }
+
+    //region Collaborative Filtering
+    private void hasUserRatedFood() {
+
+        mRatingDataBase.addListenerForSingleValueEvent(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        if (dataSnapshot.hasChild(Common.curUser.getPhone())) {
+
+                            mShowPopularity = false;
+                            mode.onResult(false, true);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        mShowPopularity = true;
+                        mode.onResult(true, false);
+                    }
+                });
+    }
+
+    private ActivityMode mode = new ActivityMode() {
+        @Override
+        public void onResult(boolean showPopularity, boolean showRecommendation) {
+
+            initUi(showRecommendation);
+
+        }
+    };
+
+    private void initUi(boolean showRecommendation) {
+
+        findViewById(R.id.progress_bar).setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.VISIBLE);
+
+        if (showRecommendation) {
+
+            findViewById(R.id.textView).setVisibility(View.VISIBLE);
+            loadRecommendationData();
+
+        } else {
+
+            sMaterialSearchBar.setVisibility(View.VISIBLE);
+            loadPopularityData();
+        }
+    }
+
+    private void loadRecommendationData() {
+
+
+        mRatingDataBase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                List<Rating> ratingList = new ArrayList<>();
+
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+
+                    for (DataSnapshot itr : postSnapshot.getChildren()) {
+
+                        Rating rating = itr.getValue(Rating.class);
+                        ratingList.add(rating);
+                    }
+
+                    Log.i(TAG, "onDataChange: " + ratingList.size());
+
+                }
+
+                Helper.getFoodRecommendation(Common.curUser, ratingList);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+    }
+
+    interface ActivityMode {
+        void onResult(boolean showPopularity, boolean showRecommendation);
+    }
+    //endregion
 }
