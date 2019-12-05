@@ -22,7 +22,6 @@
         app:mt_speechMode="false" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:visibility="gone"
         android:id="@+id/recycler_food"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -33,6 +32,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:scrollbars="vertical"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,7 +46,8 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:fontFamily="serif"
-        android:text="TextView"
+        android:padding="10dp"
+        android:text="Recommendation"
         android:textColor="@color/colorPrimary"
         android:textSize="22sp"
         android:visibility="gone"
@@ -64,5 +65,38 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <TextView
+        android:id="@+id/tv_no_results"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:fontFamily="serif"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="No Recommendation Found"
+        android:textColor="@color/colorPrimary"
+        android:textSize="22sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_check_popularity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:text="Check Popularity"
+        android:onClick="checkPopularity"
+        app:layout_constraintEnd_toEndOf="@+id/tv_no_results"
+        app:layout_constraintStart_toStartOf="@+id/tv_no_results"
+        app:layout_constraintTop_toBottomOf="@+id/tv_no_results" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

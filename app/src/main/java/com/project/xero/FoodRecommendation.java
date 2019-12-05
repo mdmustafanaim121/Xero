@@ -31,7 +31,9 @@ import com.project.xero.util.Helper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 public class FoodRecommendation extends AppCompatActivity {
 
@@ -234,6 +236,11 @@ public class FoodRecommendation extends AppCompatActivity {
 
                             mShowPopularity = false;
                             mode.onResult(false, true);
+                        } else {
+
+                            mShowPopularity = true;
+                            mode.onResult(true, false);
+
                         }
                     }
 
@@ -268,32 +275,67 @@ public class FoodRecommendation extends AppCompatActivity {
         } else {
 
             sMaterialSearchBar.setVisibility(View.VISIBLE);
+            findViewById(R.id.textView).setVisibility(View.GONE);
             loadPopularityData();
         }
     }
 
-    private void loadRecommendationData() {
 
+    List<Rating> mRatingList;
+    List<String> mUnratedFoodList;
+    List<Food> mTempFoodList;
+
+
+    private void loadRecommendationData() {
 
         mRatingDataBase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                List<Rating> ratingList = new ArrayList<>();
+                mRatingList = new ArrayList<>();
+                mUnratedFoodList = new ArrayList<>();
+                mTempFoodList = new ArrayList<>();
 
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
 
                     for (DataSnapshot itr : postSnapshot.getChildren()) {
 
                         Rating rating = itr.getValue(Rating.class);
-                        ratingList.add(rating);
+                        mRatingList.add(rating);
                     }
 
-                    Log.i(TAG, "onDataChange: " + ratingList.size());
+                    Log.i(TAG, "onDataChange: " + mRatingList.size());
 
                 }
 
-                Helper.getFoodRecommendation(Common.curUser, ratingList);
+                //Todo: Make a list of non rated food for the user and pass here
+                mFoodDataBase.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        for (DataSnapshot data : dataSnapshot.getChildren()) {
+
+                            Food food = data.getValue(Food.class);
+                            mUnratedFoodList.add(food.getFoodId());
+                            mTempFoodList.add(food);
+                        }
+
+                        HashMap<String, Double> results = Helper.getFoodRecommendation(
+                                Common.curUser,
+                                mRatingList,
+                                mUnratedFoodList);
+
+
+                        populateRecommendation(results, mTempFoodList);
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
 
             }
 
@@ -305,8 +347,50 @@ public class FoodRecommendation extends AppCompatActivity {
 
     }
 
+    private void populateRecommendation(HashMap<String, Double> results,
+                                        List<Food> unratedFoodList) {
+
+        List<Food> newFoodList = new ArrayList<>();
+
+        if (results.isEmpty()) {
+
+            toggleNoResultLayout(View.VISIBLE);
+            return;
+        }
+
+        for (Food food : unratedFoodList) {
+
+            if (results.containsKey(food.getFoodId())
+                    && results.get(food.getFoodId()) != null
+                    && results.get(food.getFoodId()) >= 3.0) {
+
+
+                newFoodList.add(food);
+
+            }
+        }
+
+        if (newFoodList.isEmpty()) {
+            toggleNoResultLayout(View.VISIBLE);
+            return;
+        }
+        updateAdapter(newFoodList);
+
+    }
+
+    public void checkPopularity(View view) {
+        toggleNoResultLayout(View.GONE);
+        initUi(false);
+    }
+
+    private void toggleNoResultLayout(int visibility) {
+
+        findViewById(R.id.tv_no_results).setVisibility(visibility);
+        findViewById(R.id.btn_check_popularity).setVisibility(visibility);
+    }
+
     interface ActivityMode {
         void onResult(boolean showPopularity, boolean showRecommendation);
     }
-    //endregion
+//endregion
 }

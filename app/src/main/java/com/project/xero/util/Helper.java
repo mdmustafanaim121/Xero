@@ -1,6 +1,5 @@
 package com.project.xero.util;
 
-import com.project.xero.Model.Food;
 import com.project.xero.Model.Rating;
 import com.project.xero.Model.User;
 
@@ -10,19 +9,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-/**
- * Created by Rajat Sangrame on 3/12/19.
- * http://github.com/rajatsangrame
- */
+
 public class Helper {
 
 
     // Map<Food,HashMap<User,Double>>
-    private static Map<String, HashMap<String, Double>> mFoodData = new HashMap<>();
+    private static Map<String, HashMap<String, Double>> mFoodData;
     // Map<Food,HashMap<Food,Double>>
-    private static Map<String, HashMap<String, Double>> mSimilarityTable = new HashMap<>();
+    private static Map<String, HashMap<String, Double>> mSimilarityTable;
 
-    public static List<String> getFoodRecommendation(User user, List<Rating> ratingList) {
+    public static HashMap<String,Double> getFoodRecommendation(User user, List<Rating> ratingList,
+                                                     List<String> foodList) {
+
+        mFoodData = new HashMap<>();
+        mSimilarityTable = new HashMap<>();
 
         //region Fill mFoodData with available data
         for (Rating rat : ratingList) {
@@ -49,7 +49,6 @@ public class Helper {
             for (Entry<String, HashMap<String, Double>> UserCol1 : mFoodData.entrySet()) {
 
                 if (UserCol1.getKey().equals(UserCol2.getKey())) { // Food
-                    // Todo: Add rating == 1 for this case
                     continue;
                 }
 
@@ -60,19 +59,19 @@ public class Helper {
                 //HashMap<User, Double>
                 HashMap<String, Double> UserCol2Values = UserCol2.getValue();
 
-                List<Double> User2Rating = new ArrayList<>();
-                List<Double> User1Rating = new ArrayList<>();
+                List<Double> food2Rating = new ArrayList<>();
+                List<Double> food1Rating = new ArrayList<>();
 
                 //Entry<User, Double>
-                for (Entry<String, Double> uUser2 : UserCol2Values.entrySet()) {
+                for (Entry<String, Double> uFood2 : UserCol2Values.entrySet()) {
 
                     //Entry<User, Double>
-                    for (Entry<String, Double> uUser1 : UserCol1Values.entrySet()) {
+                    for (Entry<String, Double> uFood1 : UserCol1Values.entrySet()) {
 
-                        if (uUser2.getKey().equals(uUser1.getKey())) {
+                        if (uFood2.getKey().equals(uFood1.getKey())) {
 
-                            User2Rating.add(uUser2.getValue());
-                            User1Rating.add(uUser1.getValue());
+                            food2Rating.add(uFood2.getValue());
+                            food1Rating.add(uFood1.getValue());
                             break;
                         }
                     }
@@ -85,12 +84,12 @@ public class Helper {
                 Double aaa = 0.0;
                 Double bbb = 0.0;
 
-                for (int i = 0; i < User1Rating.size(); i++) {
-                    n = n + (User1Rating.get(i) * User2Rating.get(i));
+                for (int i = 0; i < food1Rating.size(); i++) {
+                    n = n + (food1Rating.get(i) * food2Rating.get(i));
                 }
-                for (int i = 0; i < User1Rating.size(); i++) {
-                    aaa = aaa + Math.pow(User1Rating.get(i), 2.0);
-                    bbb = bbb + Math.pow(User2Rating.get(i), 2.0);
+                for (int i = 0; i < food1Rating.size(); i++) {
+                    aaa = aaa + Math.pow(food1Rating.get(i), 2.0);
+                    bbb = bbb + Math.pow(food2Rating.get(i), 2.0);
                 }
                 d = Math.sqrt(aaa * bbb);
                 Double theta = n / d;
@@ -116,12 +115,10 @@ public class Helper {
 
         System.out.println(String.format("Similarity Table Size %s", mSimilarityTable.size()));
 
-        getRecommendationForFood(user.getName(), "");
-
-        return null;
+        return getRecommendationForFood(user.getPhone(), foodList);
     }
 
-    private static Double getRecommendationForFood(String userId, String bookId) {
+    private static HashMap<String, Double> getRecommendationForFood(String userId, List<String> foodId) {
 
         //Map<Food, Double>
         Map<String, Double> userData = new HashMap<>();
@@ -137,47 +134,71 @@ public class Helper {
             }
         }
 
-        //Map<Food, Double>
-        Map<String, Double> similarityForFoodData = new HashMap<>();
+        // Map<Food, Double>
+        Map<String, Double> similarityForUserData = new HashMap<>();
+        List<String> foodList = new ArrayList<>();
+        HashMap<String, Double> similarityResults = new HashMap<>();
 
+        // Todo Filer the food list which current user has rated
+
+        for (String food : foodId) {
+
+            if (!userData.containsKey(food)) {
+
+                foodList.add(food);
+            }
+        }
         //HashMap<Food, Double>
-        HashMap<String, Double> UserData = mSimilarityTable.get("");
+        for (String food : foodList) {
 
-        //Entry<Food, Double>
-        for (Entry<String, Double> itr : userData.entrySet()) {
+            HashMap<String, Double> foodData = mSimilarityTable.get(food);
 
-            //(Entry<Food, Double>
-            for (Entry<String, Double> itr2 : UserData.entrySet()) {
+            if (foodData == null) {
+                continue;
+            }
 
-                if (itr2.getKey().equals(itr.getKey())) {
+            // Entry<Food, Double>
+            for (Entry<String, Double> itr : userData.entrySet()) {
 
-                    similarityForFoodData.put(itr.getKey(), itr2.getValue());
+                // Entry<Food, Double>
+                for (Entry<String, Double> itr2 : foodData.entrySet()) {
+
+                    if (itr2.getKey().equals(itr.getKey())) {
+
+                        similarityForUserData.put(itr.getKey(), itr2.getValue());
+                    }
                 }
             }
-        }
 
-        // (4*0.792 + 5*0.8) / (0.792+ 0.8) = 4.5
-        Double n = 0.0;
-        Double d = 0.0;
+            // (4*0.792 + 5*0.8) / (0.792+ 0.8) = 4.5
+            Double n = 0.0;
+            Double d = 0.0;
 
-        //Entry<Food, Double>
-        for (Entry<String, Double> itr : userData.entrySet()) {
+            //Entry<Food, Double
+            for (Entry<String, Double> itr : userData.entrySet()) {
 
-            //Entry<Book, Double>
-            for (Entry<String, Double> itr2 : similarityForFoodData.entrySet()) {
+                //Entry<Food, Double
+                for (Entry<String, Double> itr2 : similarityForUserData.entrySet()) {
 
-                if (itr2.getKey().equals(itr.getKey())) {
+                    if (itr2.getKey().equals(itr.getKey())) {
 
-                    n = n + (itr.getValue() * itr2.getValue());
-                    d = d + itr2.getValue();
+                        n = n + (itr.getValue() * itr2.getValue());
+                        d = d + itr2.getValue();
+                    }
                 }
             }
+
+            Double result = n / d;
+
+            similarityResults.put(food, result);
+
+//        System.out.println(String.format("Recommendation for %s for %s is %s",
+//                user.userName, book.name, result));
+
         }
 
-        Double result = n / d;
-        System.out.println("ABCD");
+        return similarityResults;
 
-        return result;
     }
     //endregion
 }

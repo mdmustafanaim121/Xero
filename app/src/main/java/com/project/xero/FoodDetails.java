@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RatingBar;
@@ -116,19 +117,30 @@ public class FoodDetails extends AppCompatActivity implements RatingDialogListen
         }
     }
 
-    private void getRatingFood(String foodId) {
-        com.google.firebase.database.Query foodRating = ratingTb.orderByChild("foodId").equalTo(foodId);
+    private void getRatingFood(final String foodId) {
 
-        foodRating.addValueEventListener(new ValueEventListener() {
+        ratingTb.addListenerForSingleValueEvent(new ValueEventListener() {
             double count = 0, sum = 0;
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                Log.i("MN", "onDataChange: ");
+
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    Rating item = postSnapshot.getValue(Rating.class);
-                    assert item != null;
-                    sum += item.getRateValue();
-                    count++;
+
+                    for (DataSnapshot post : postSnapshot.getChildren()) {
+
+                        Rating item = post.getValue(Rating.class);
+                        assert item != null;
+
+                        if (item.getFoodId().equals(foodId)) {
+
+                            sum += item.getRateValue();
+                            count++;
+                        }
+                    }
+
                 }
                 if (count != 0) {
                     double average = sum / count;
